@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import "../app.css";
+	import Cookies from "js-cookie";
 
 	let personName: string = "";
 	let warning: string = "";
@@ -38,7 +39,7 @@
 			warning = "";
 		}
 
-		document.cookie = `chatName=${personName};`;
+		Cookies.set("chatName", personName);
 		window.location.href = "/chat";
 	};
 

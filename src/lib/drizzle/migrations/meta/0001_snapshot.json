@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "3e5468c4-afdf-4e32-98c8-0969168191d0",
-  "prevId": "daad246b-6878-4fd5-977b-4073ba20cccb",
+  "id": "484062cf-8ed6-4b0f-8990-865a39773046",
+  "prevId": "cc68c387-1170-47d5-ad00-e5bc5a332d4b",
   "tables": {
     "analytics": {
       "name": "analytics",
@@ -94,6 +94,13 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "last_deleted": {
+          "name": "last_deleted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -127,13 +134,6 @@
         },
         "order": {
           "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "deleted": {
-          "name": "deleted",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

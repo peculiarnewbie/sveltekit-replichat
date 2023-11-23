@@ -60,21 +60,15 @@ export async function POST({ request }: RequestEvent) {
 								sender: args.from,
 								content: args.content,
 								order: args.order,
-								deleted: 0,
 								version: nextVersion
 							});
+							await db.update(replicache_server).set({ version: nextVersion });
 							break;
 						case "deleteMessage":
-							const deleteIds: string[] = [];
-							let Ids = mutation.args as string[];
-							Ids.forEach((id) => {
-								deleteIds.push(id.split("/").slice(1).join(""));
-							});
-							console.log("deleting", deleteIds);
+							await db.delete(test_messages);
 							await db
-								.update(test_messages)
-								.set({ deleted: 1, version: nextVersion })
-								.where(inArray(test_messages.id, deleteIds));
+								.update(replicache_server)
+								.set({ version: nextVersion, last_deleted: nextVersion });
 							break;
 						default:
 							throw new Error(`Unknown mutation: ${mutation.name}`);
@@ -98,8 +92,6 @@ export async function POST({ request }: RequestEvent) {
 							version: nextVersion
 						});
 					}
-
-					await db.update(replicache_server).set({ version: nextVersion });
 				});
 			} catch (e) {
 				console.error("Caught error from mutation", mutation, e);
@@ -112,7 +104,7 @@ export async function POST({ request }: RequestEvent) {
 			key: PUBLIC_SOKETI_PUSHER_KEY,
 			secret: env.SOKETI_PUSHER_SECRET,
 			host: PUBLIC_SOKETI_PUSHER_HOST,
-			cluster: "Replichat",
+			cluster: "Sveltekit-Replichat",
 			useTLS: true
 		});
 		const t0 = Date.now();

@@ -7,8 +7,10 @@
 	import { nanoid } from "nanoid";
 	import { PUBLIC_SOKETI_PUSHER_HOST, PUBLIC_SOKETI_PUSHER_KEY } from "$env/static/public";
 	import Pusher from "pusher-js";
+	import Cookies from "js-cookie";
 
 	let rep: Replicache;
+	let pusher: Pusher;
 	let name = "dbName";
 	let sharedList = [] as [string, Message][];
 
@@ -35,8 +37,7 @@
 
 	const submitMessage = (e: SubmitEvent) => {
 		e.preventDefault();
-
-		console.log("push message");
+		console.log("message button");
 
 		const last = sharedList.length && sharedList[sharedList.length - 1][1];
 		const order = (last?.order ?? 0) + 1;
@@ -49,8 +50,6 @@
 		});
 		messageValue = "";
 
-		console.log("mutated?");
-
 		setTimeout(() => {
 			chatWindow.scrollTop = chatWindow.scrollHeight;
 		}, 100);
@@ -62,75 +61,88 @@
 			rep.mutate.deleteMessage({ id: message[0] });
 		});
 		*/
-		const deleteList: string[] = [];
-
-		sharedList.forEach(([id, message]) => {
-			deleteList.push(id);
-		});
-
-		rep.mutate.deleteMessage(deleteList);
+		console.log("clearing");
+		rep.mutate.deleteMessage();
 	};
 
 	onMount(() => {
-		rep = new Replicache({
-			name: "chat-user-id",
-			licenseKey: env.PUBLIC_REPLICACHE_LICENSE_KEY ?? "empty",
-			pushURL: "/api/replicache/test-push",
-			pullURL: "/api/replicache/test-pull",
-			mutators: {
-				async deleteMessage(tx: WriteTransaction, ids: string[]) {
-					console.log("deleting", ids);
-					let tasks: Promise<boolean>[] = [];
-					ids.forEach((id) => {
-						tasks.push(tx.del(id));
-					});
-					const res = await Promise.all(tasks);
-					console.log("deleted: ", res);
-				},
-				async createMessage(tx: WriteTransaction, { id, from, content, order }: MessageWithID) {
-					await tx.put(`message/${id}`, {
-						from,
-						content,
-						order
-					});
-				}
+		if (!rep) {
+			console.log("build rep client");
+			let userId = Cookies.get("userId");
+			if (!userId) {
+				userId = nanoid();
+				Cookies.set("userId", userId);
 			}
-		});
-
-		if (rep) {
-			name = rep.idbName;
-
-			rep.subscribe(
-				async (tx) =>
-					(await tx.scan({ prefix: "message/" }).entries().toArray()) as [string, Message][],
-				{
-					onData: (list) => {
-						list.sort(([, { order: a }], [, { order: b }]) => a - b);
-						sharedList = list;
+			rep = new Replicache({
+				name: "chat-user-id",
+				licenseKey: env.PUBLIC_REPLICACHE_LICENSE_KEY ?? "empty",
+				pushURL: "/api/replicache/test-push",
+				pullURL: "/api/replicache/test-pull",
+				mutators: {
+					async deleteMessage(tx: WriteTransaction) {
+						let tasks: Promise<boolean>[] = [];
+						sharedList.forEach(([id]) => {
+							console.log("deleting", id);
+							tasks.push(tx.del(id));
+						});
+						const res = await Promise.all(tasks);
+						console.log("deleted: ", res);
+					},
+					async createMessage(tx: WriteTransaction, { id, from, content, order }: MessageWithID) {
+						console.log("creating message", id);
+						await tx.put(`message/${id}`, {
+							from,
+							content,
+							order
+						});
+						console.log("message put");
 					}
 				}
-			);
-
-			console.log("listening");
-
-			Pusher.logToConsole = true;
-			const pusher = new Pusher(PUBLIC_SOKETI_PUSHER_KEY, {
-				wsHost: PUBLIC_SOKETI_PUSHER_HOST,
-				cluster: "Replichat",
-				forceTLS: true,
-				disableStats: true,
-				enabledTransports: ["ws", "wss"]
 			});
-			const channel = pusher.subscribe("chat");
-			channel.bind("poke", () => {
-				console.log("got poked");
-				rep.pull();
-			});
-			userValue = getCookie("chatName");
 
-			setTimeout(() => {
-				chatWindow.scrollTop = chatWindow.scrollHeight;
-			}, 100);
+			if (rep) {
+				name = rep.idbName;
+
+				rep.subscribe(
+					async (tx) =>
+						(await tx.scan({ prefix: "message/" }).entries().toArray()) as [string, Message][],
+					{
+						onData: (list) => {
+							console.log("list now: ", list);
+							if (list.length < 1) {
+								sharedList = [];
+							} else {
+								list.sort(([, { order: a }], [, { order: b }]) => a - b);
+								sharedList = list;
+							}
+						}
+					}
+				);
+
+				console.log("listening");
+
+				pusher = new Pusher(PUBLIC_SOKETI_PUSHER_KEY, {
+					wsHost: PUBLIC_SOKETI_PUSHER_HOST,
+					cluster: "Sveltekit-Replichat",
+					forceTLS: true,
+					disableStats: true,
+					enabledTransports: ["ws", "wss"]
+				});
+				const channel = pusher.subscribe("chat");
+				channel.bind("poke", () => {
+					console.log("got poked");
+					rep.pull();
+				});
+				userValue = getCookie("chatName");
+
+				setTimeout(() => {
+					chatWindow.scrollTop = chatWindow.scrollHeight;
+				}, 100);
+			}
+			return () => {
+				rep.close();
+				pusher.disconnect();
+			};
 		}
 	});
 </script>

@@ -10,17 +10,23 @@ export async function POST({ request }: RequestEvent) {
 	console.log(`Processing pull`, JSON.stringify(pull));
 
 	const groupId = pull.clientGroupID;
-	const fromVersion = (pull.cookie as number) ?? 0;
+	const fromVersion = (pull.cookie ?? 0) as number;
 	const t0 = Date.now();
 
 	try {
 		const response = await db.transaction(async (tx) => {
-			const currentVersion = (
+			const server = (
 				await db
-					.select({ version: replicache_server.version })
+					.select({
+						version: replicache_server.version,
+						lastDeleted: replicache_server.last_deleted
+					})
 					.from(replicache_server)
 					.where(eq(replicache_server.id, serverId))
-			)[0].version;
+			)[0];
+
+			const currentVersion = server.version;
+			const lastDeleted = server.lastDeleted ?? 0;
 
 			console.log("from: ", fromVersion, "current: ", currentVersion);
 
@@ -29,13 +35,16 @@ export async function POST({ request }: RequestEvent) {
 					throw new Error(
 						`fromVersion ${fromVersion} is from the future - aborting. This can happen in development if the server restarts. In that case, clear application data in browser and refresh.`
 					);
-				} else if (fromVersion == currentVersion) {
+				}
+				/*
+				else if (fromVersion == currentVersion) {
 					return {
 						lastMutationIDChanges: {},
 						cookie: currentVersion,
 						patch: []
 					};
 				}
+				*/
 			}
 
 			const changesRow = await db
@@ -47,9 +56,11 @@ export async function POST({ request }: RequestEvent) {
 				.where(
 					and(
 						eq(replicache_client.client_group_id, groupId),
-						eq(replicache_client.version, fromVersion)
+						gt(replicache_client.version, fromVersion)
 					)
 				);
+
+			console.log("row Changes: ", changesRow);
 
 			let lastMutationIdChanges:
 				| {
@@ -72,29 +83,32 @@ export async function POST({ request }: RequestEvent) {
 			const changed = await db
 				.select()
 				.from(test_messages)
-				.where(gt(test_messages.version, fromVersion));
+				.where(and(gt(test_messages.version, fromVersion), gt(test_messages.version, lastDeleted)));
 
 			console.log(fromVersion, changed);
 
 			const patch: PatchOperation[] = [];
 
-			for (const row of changed) {
-				if (row.deleted) {
-					if (row.version > fromVersion) {
-						patch.push({ op: "del", key: `message/${row.id}` });
-					}
-				} else {
-					patch.push({
-						op: "put",
-						key: `message/${row.id}`,
-						value: {
-							from: row.sender,
-							content: row.content,
-							order: row.order
-						}
-					});
-				}
+			if (lastDeleted > fromVersion) {
+				patch.push({
+					op: "clear"
+				});
 			}
+
+			for (const row of changed) {
+				patch.push({
+					op: "put",
+					key: `message/${row.id}`,
+					value: {
+						from: row.sender,
+						content: row.content,
+						order: row.order
+					}
+				});
+			}
+
+			console.log("lastMutationIDChanges: ", lastMutationIdChanges);
+			console.log("responseCookie: ", currentVersion);
 
 			const body: PullResponseV1 = {
 				lastMutationIDChanges: lastMutationIdChanges ?? {},

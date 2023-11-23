@@ -12,7 +12,7 @@ import {
 export const replicache_server = sqliteTable("replicache_server", {
 	id: integer("id").notNull().primaryKey(),
 	version: integer("version"),
-	last_deleted: integer("version")
+	last_deleted: integer("last_deleted")
 });
 
 export const replicache_client = sqliteTable("replicache_client", {

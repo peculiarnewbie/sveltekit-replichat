@@ -1,0 +1,51 @@
+{
+	"name": "masse-breakers",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"test": "npm run test:integration && npm run test:unit",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test:integration": "playwright test",
+		"test:unit": "vitest",
+		"lint": "prettier --check .",
+		"format": "prettier --write .",
+		"generate": "drizzle-kit generate:sqlite --out ./src/lib/drizzle/migrations --breakpoints --schema=./src/lib/drizzle/schema.ts",
+		"migrate": "tsx --env-file=.env src/lib/drizzle/migrate",
+		"studio": "drizzle-kit studio --port 3333",
+		"push-db": "drizzle-kit push:sqlite",
+		"drop-migrations": "drizzle-kit group"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.40.0",
+		"@sveltejs/adapter-auto": "^2.1.1",
+		"@sveltejs/kit": "^1.27.6",
+		"autoprefixer": "^10.4.16",
+		"drizzle-kit": "^0.20.4",
+		"postcss": "^8.4.31",
+		"prettier": "^3.1.0",
+		"prettier-plugin-svelte": "^3.1.1",
+		"prettier-plugin-tailwindcss": "^0.5.7",
+		"svelte": "^4.2.7",
+		"svelte-check": "^3.6.0",
+		"tailwindcss": "^3.3.5",
+		"tslib": "^2.6.2",
+		"tsx": "^4.2.0",
+		"typescript": "^5.3.2",
+		"vite": "^4.5.0",
+		"vitest": "^0.32.4"
+	},
+	"type": "module",
+	"dependencies": {
+		"@libsql/client": "^0.4.0-pre.1",
+		"dotenv": "^16.3.1",
+		"drizzle-orm": "^0.29.0",
+		"nanoid": "^5.0.3",
+		"pusher": "^5.2.0",
+		"pusher-js": "^8.3.0",
+		"replicache": "^13.0.1"
+	}
+}

@@ -8,6 +8,7 @@
 	import { PUBLIC_SOKETI_PUSHER_HOST, PUBLIC_SOKETI_PUSHER_KEY } from "$env/static/public";
 	import Pusher from "pusher-js";
 	import Cookies from "js-cookie";
+	import { goto } from "$app/navigation";
 
 	let rep: Replicache;
 	let pusher: Pusher;
@@ -50,6 +51,9 @@
 			order: order
 		});
 		messageValue = "";
+		setTimeout(() => {
+			chatWindow.scrollTop = chatWindow.scrollHeight;
+		}, 0);
 	};
 
 	const clearAll = () => {
@@ -66,7 +70,7 @@
 	onMount(() => {
 		let nameCookie = getCookie("chatName");
 		if (!nameCookie) {
-			window.location.href = "/";
+			goto("/");
 			return;
 		}
 		userValue = getCookie("chatName");
@@ -94,7 +98,7 @@
 						console.log("deleted: ", res);
 					},
 					async createMessage(tx: WriteTransaction, { id, from, content, order }: MessageWithID) {
-						// console.log("creating message", id);
+						console.log("creating message", id);
 						await tx.put(`message/${id}`, {
 							from,
 							content,
@@ -113,16 +117,21 @@
 						(await tx.scan({ prefix: "message/" }).entries().toArray()) as [string, Message][],
 					{
 						onData: (list) => {
-							// console.log("list now: ", list);
+							const isAtBottom =
+								chatWindow.scrollTop > chatWindow.scrollHeight - chatWindow.clientHeight - 200
+									? true
+									: false;
 							if (list.length < 1) {
 								sharedList = [];
 							} else {
 								list.sort(([, { order: a }], [, { order: b }]) => a - b);
 								sharedList = list;
 							}
-							setTimeout(() => {
-								chatWindow.scrollTop = chatWindow.scrollHeight;
-							}, 0);
+							if (isAtBottom) {
+								setTimeout(() => {
+									chatWindow.scrollTop = chatWindow.scrollHeight;
+								}, 0);
+							}
 						}
 					}
 				);

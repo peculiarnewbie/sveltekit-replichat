@@ -122,6 +122,6 @@ export async function POST({ request }: RequestEvent) {
 		console.error(e);
 		return json({ body: JSON.stringify(e) }, { status: 500 });
 	} finally {
-		console.log("Processed pull in ", Date.now(), t0);
+		console.log("Processed pull in ", Date.now() - t0);
 	}
 }

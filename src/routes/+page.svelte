@@ -2,6 +2,7 @@
 	import { onMount } from "svelte";
 	import "../app.css";
 	import Cookies from "js-cookie";
+	import { goto } from "$app/navigation";
 
 	let personName: string = "";
 	let warning: string = "";
@@ -32,7 +33,7 @@
 		}
 
 		Cookies.set("chatName", personName);
-		window.location.href = "/chat";
+		goto("/chat");
 	};
 
 	onMount(() => {

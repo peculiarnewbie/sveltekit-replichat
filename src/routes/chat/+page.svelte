@@ -163,10 +163,15 @@
 	});
 </script>
 
-<div class="flex w-screen flex-col items-center justify-center gap-2 p-4 text-slate-200">
-	{name}
+<div class="relative flex h-screen w-screen flex-col items-center gap-2 p-4 text-slate-200">
+	<p class="text-center">
+		{name}
+	</p>
 	<div class="p-1"></div>
-	<div bind:this={chatWindow} class="h-[800px] w-96 overflow-y-scroll rounded-lg bg-slate-800">
+	<div
+		bind:this={chatWindow}
+		class="h-[800px] w-full max-w-[24rem] overflow-y-scroll rounded-lg bg-slate-800"
+	>
 		<div class="flex w-full flex-col gap-4 p-4">
 			{#each sharedList as [item, message]}
 				<div class={` w-64  ${userValue == message.from ? " self-end" : "self-start"}`}>
@@ -176,20 +181,26 @@
 			{/each}
 		</div>
 	</div>
-	<form on:submit={submitMessage} class="flex gap-3">
+	<form on:submit={submitMessage} class="flex w-full max-w-[24rem] gap-3">
 		<input class="w-80 rounded-md p-2 text-slate-800" type="text" bind:value={messageValue} />
 
-		<button>Send</button>
+		<button class="rounded-md bg-slate-800 p-2">Send</button>
 	</form>
-	<button
-		on:click={() => {
-			clearModal = true;
-		}}>clear</button
-	>
+	<div class="flex w-full max-w-[24rem] items-center justify-between">
+		<button
+			class="rounded-md bg-red-700 p-2"
+			on:click={() => {
+				clearModal = true;
+			}}>clear messages</button
+		>
+		<p>made by <a class="text-sky-400" href="https://peculiarnewbie.com"> peculiarnewbie </a></p>
+	</div>
 	{#if clearModal}
-		<div class="fixed flex flex-col justify-center gap-2 rounded-lg bg-slate-900 px-24 py-8">
-			<p>Clear all messages for all users?</p>
-			<div class="flex justify-center gap-4">
+		<div
+			class=" fixed top-1/2 m-2 flex w-[95%] max-w-lg flex-col justify-center gap-2 rounded-lg bg-slate-900 px-24 py-8"
+		>
+			<p class="text-center">Clear all messages for all users?</p>
+			<div class=" flex justify-center gap-4">
 				<button
 					on:click={() => {
 						clearModal = false;

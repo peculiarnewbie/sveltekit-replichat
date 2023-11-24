@@ -90,7 +90,11 @@
 				mutators: {
 					async deleteMessage(tx: WriteTransaction) {
 						let tasks: Promise<boolean>[] = [];
-						sharedList.forEach(([id]) => {
+						let messages = (await tx.scan({ prefix: "message/" }).entries().toArray()) as [
+							string,
+							Message
+						][];
+						messages.forEach(([id]) => {
 							// ("deleting", id);
 							tasks.push(tx.del(id));
 						});

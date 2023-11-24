@@ -22,14 +22,6 @@
 		return "";
 	}
 
-	const createRoom = async () => {
-		const result = await fetch("../api/createRoom", {
-			method: "POST"
-		});
-
-		console.log(result);
-	};
-
 	const joinRoom = async (e: SubmitEvent) => {
 		e.preventDefault();
 		if (personName == "Bolt" || personName == "bolt") {

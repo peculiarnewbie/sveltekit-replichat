@@ -2,13 +2,12 @@ import { db, serverId } from "$lib/drizzle/dbClient";
 import { replicache_client, replicache_server, test_messages } from "$lib/drizzle/schema";
 import { env } from "$env/dynamic/private";
 import { PUBLIC_SOKETI_PUSHER_KEY, PUBLIC_SOKETI_PUSHER_HOST } from "$env/static/public";
+import { SOKETI_PUSHER_APP_ID, SOKETI_PUSHER_SECRET } from "$env/static/private";
 
 import type { MessageWithID } from "$lib/types";
 import { json, type RequestEvent } from "@sveltejs/kit";
 import { eq, inArray } from "drizzle-orm";
 import type { PushRequestV1 } from "replicache";
-
-import Pusher from "pusher";
 
 export async function POST({ request }: RequestEvent) {
 	const push: PushRequestV1 = await request.json();
@@ -97,18 +96,32 @@ export async function POST({ request }: RequestEvent) {
 				console.error("Caught error from mutation", mutation, e);
 			}
 		}
-
-		// await sendPoke();
-		const pusher = new Pusher({
-			appId: env.SOKETI_PUSHER_APP_ID,
-			key: PUBLIC_SOKETI_PUSHER_KEY,
-			secret: env.SOKETI_PUSHER_SECRET,
-			host: PUBLIC_SOKETI_PUSHER_HOST,
-			cluster: "Sveltekit-Replichat",
-			useTLS: true
-		});
 		const t0 = Date.now();
-		await pusher.trigger("chat", "poke", {});
+
+		const url = "https://lui2qrueozekdewdfqbzj7sj440wksxa.lambda-url.ap-southeast-1.on.aws/";
+
+		let body = {
+			appId: SOKETI_PUSHER_APP_ID,
+			pusherKey: PUBLIC_SOKETI_PUSHER_KEY,
+			pusherSecret: SOKETI_PUSHER_SECRET,
+			cluster: "Sveltekit-Replichat",
+			channel: "chat",
+			message: "poke"
+		};
+		const options = {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(body)
+		};
+
+		try {
+			const response = await fetch(url, options);
+			const data = await response.json();
+			console.log(data);
+		} catch (error) {
+			console.error(error);
+		}
+
 		console.log("Sent poke in", Date.now() - t0);
 
 		return json({});

@@ -60,8 +60,6 @@ export async function POST({ request }: RequestEvent) {
 					)
 				);
 
-			console.log("row Changes: ", changesRow);
-
 			let lastMutationIdChanges:
 				| {
 						[k: string]: any;
@@ -85,7 +83,7 @@ export async function POST({ request }: RequestEvent) {
 				.from(test_messages)
 				.where(and(gt(test_messages.version, fromVersion), gt(test_messages.version, lastDeleted)));
 
-			console.log(fromVersion, changed);
+			console.log("changed: ", changed);
 
 			const patch: PatchOperation[] = [];
 

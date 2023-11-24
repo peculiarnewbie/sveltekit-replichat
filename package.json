@@ -42,6 +42,7 @@
 	"type": "module",
 	"dependencies": {
 		"@libsql/client": "^0.4.0-pre.1",
+		"@sveltejs/adapter-cloudflare": "^2.3.3",
 		"dotenv": "^16.3.1",
 		"drizzle-orm": "^0.29.0",
 		"js-cookie": "^3.0.5",

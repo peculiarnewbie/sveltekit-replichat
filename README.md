@@ -6,7 +6,7 @@ With Sveltekit as the frontend framework, TursoDB and drizzle ORM to manage the 
 check the demo [here](https://replichat.peculiarnewbie.com)
 
 > [!WARNING]  
-> This demo no longer works. I turned off the durable objects for it
+> This demo no longer works in real time. I turned off the durable objects for it
 
 ___
 somehow this repo occasionally still get stars. I want to call out some things i would've done differently as of early 2025:
